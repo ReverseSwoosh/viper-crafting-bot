@@ -291,58 +291,172 @@
 
   /* ── PRINT / PDF STYLES ────────────────────────────────────────────────── */
   @media print {
-    body { background: #fff !important; color: #000 !important; font-size: 11px; }
-    .container { max-width: 100% !important; padding: 0 !important; }
-    /* Hide interactive elements */
-    button, input, select, .mat-grid, #step1, #step2, #step3,
-    #warningBox, #maxTempsBox, .section-title:first-of-type,
-    .not-enough-box, .max-temps-box, #exportBtn, #chatBtn { display: none !important; }
-    /* Show only results */
-    #results { display: block !important; }
-    .rollup-section { display: block !important; }
-    /* Watermark on every page */
+    /* Force browser to print background colours and images */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
     @page {
-      margin: 1.5cm 1.2cm 2cm 1.2cm;
+      margin: 1.2cm 1.2cm 1.8cm 1.2cm;
+      background: #0d0b08;
       @bottom-right {
         content: "Viper's Temp Rolling Bot";
         font-size: 9px;
-        color: #999;
+        color: #8a7a5a;
         font-style: italic;
       }
     }
-    /* Simulated watermark via fixed positioning (for browsers without @page support) */
+
+    /* Root dark background preserved */
+    html, body {
+      background: #0d0b08 !important;
+      color: #d4c4a0 !important;
+      font-size: 11px;
+    }
+
+    /* Simulated page watermark */
     body::after {
       content: "Viper's Temp Rolling Bot";
       position: fixed;
       bottom: 12px;
       right: 16px;
-      font-size: 10px;
-      color: #bbb;
+      font-size: 9px;
+      color: #8a7a5a;
       font-style: italic;
       font-family: serif;
       z-index: 9999;
       pointer-events: none;
     }
-    /* Color adjustments for print */
-    .mat-summary-table table, .rollup-mat-table table { border-collapse: collapse; width: 100%; }
-    .mat-summary-table td, .mat-summary-table th,
-    .rollup-mat-table td, .rollup-mat-table th { border: 1px solid #ccc; padding: 4px 6px; color: #000 !important; }
-    .num-used { color: #c0392b !important; }
-    .num-stage-left, .num-remaining { color: #27ae60 !important; }
-    .rollup-outcome { border: 2px solid #c9a84c; background: #fff8e1 !important; }
-    .rollup-outcome .big { color: #8a6914 !important; }
-    .rollup-assumptions { background: #f9f9f9 !important; border: 1px solid #ddd; }
-    .info-box { background: #f9f9f9 !important; border: 1px solid #ddd; color: #000 !important; }
-    .rollup-summary-grid > div { border: 1px solid #ccc !important; background: #f9f9f9 !important; }
-    .rollup-stat .val { color: #8a6914 !important; }
-    .section-title { color: #333 !important; font-size: 13px; border: none; }
-    .section-title::after { background: #ccc !important; }
-    .mini-bar { display: none; }
-    h1 { color: #333 !important; font-size: 18px !important; border-bottom: 2px solid #ccc; padding-bottom: 6px; }
+
+    /* Hide all interactive / input elements */
+    button, input, select,
+    .mat-grid, #step1, #step2, #step3,
+    #warningBox, #maxTempsBox,
+    .not-enough-box, .max-temps-box,
+    #exportBtn, #chat-btn, #chat-panel { display: none !important; }
+
+    /* Always show results */
+    #results { display: block !important; }
+    .rollup-section { display: block !important; }
+
+    /* Container */
+    .container { max-width: 100% !important; padding: 4px 0 !important; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(180deg, rgba(201,168,76,0.10) 0%, transparent 100%) !important;
+      border-bottom: 1px solid #3a2e18 !important;
+    }
+    h1 { color: #e8c97a !important; font-size: 20px !important; }
+    .header p { color: #8a7a5a !important; }
+
+    /* Section titles */
+    .section-title { color: #c9a84c !important; font-size: 10px !important; }
+    .section-title::after { background: linear-gradient(90deg, #5a4520, transparent) !important; }
+
+    /* Cards / panels */
+    .craft-table, .mat-summary-table, .rollup-mat-table {
+      background: #231c0f !important;
+      border: 1px solid #3a2e18 !important;
+    }
+    .craft-table th, .mat-summary-table th, .rollup-mat-table th {
+      background: #161208 !important;
+      color: #c9a84c !important;
+      border-bottom: 1px solid #5a4520 !important;
+    }
+    .craft-table td, .mat-summary-table td, .rollup-mat-table td {
+      color: #d4c4a0 !important;
+      border-bottom: 1px solid #3a2e18 !important;
+    }
+
+    /* Results header stat blocks */
+    .results-header {
+      background: #231c0f !important;
+      border: 1px solid #5a4520 !important;
+    }
+    .stat-block .val { color: #e8c97a !important; }
+    .stat-block .lbl { color: #8a7a5a !important; }
+
+    /* Colour-coded numbers */
+    .num-used, .mat-summary-table .num-used { color: #e07a6a !important; }
+    .num-stage-left, .num-remaining, .mat-summary-table .num-left { color: #6aaa6a !important; }
+    .num-stage-used { color: #e07a6a !important; }
+    .mat-summary-table .num-zero { color: #8a7a5a !important; }
+
+    /* Rollup section */
+    .rollup-assumptions {
+      background: rgba(201,168,76,0.08) !important;
+      border: 1px solid rgba(201,168,76,0.25) !important;
+      color: #8a7a5a !important;
+    }
+    .rollup-assumptions strong { color: #c9a84c !important; }
+    .rollup-summary-box {
+      background: rgba(0,0,0,0.3) !important;
+      border: 1px solid #3a2e18 !important;
+    }
+    .rollup-stat .val { color: #c9a84c !important; }
+    .rollup-stat .lbl { color: #8a7a5a !important; }
+    .rollup-stage-badge {
+      background: rgba(201,168,76,0.15) !important;
+      border: 1px solid #c9a84c !important;
+      color: #c9a84c !important;
+    }
+    .rollup-outcome {
+      background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(106,170,106,0.08)) !important;
+      border: 1px solid rgba(201,168,76,0.3) !important;
+    }
+    .rollup-outcome .big { color: #c9a84c !important; }
+    .rollup-outcome .label { color: #8a7a5a !important; }
+    .rollup-outcome .sub { color: #8a7a5a !important; }
+    .rollup-warning {
+      background: rgba(220,80,60,0.08) !important;
+      border: 1px solid rgba(220,80,60,0.3) !important;
+      color: #e07a6a !important;
+    }
+
+    /* Info / warning boxes */
+    .info-box {
+      background: rgba(201,168,76,0.06) !important;
+      border: 1px solid rgba(201,168,76,0.2) !important;
+      color: #8a7a5a !important;
+    }
+    .max-temps-box {
+      background: rgba(74,138,74,0.1) !important;
+      border: 1px solid rgba(74,138,74,0.4) !important;
+    }
+    .max-temps-box .title { color: #6aaa6a !important; }
+    .max-temps-box .big-num { color: #6add6a !important; }
+
+    /* Badges */
+    .badge-s1 { background: rgba(42,90,138,0.3) !important; border: 1px solid #2a5a8a !important; color: #6aacdd !important; }
+    .badge-s3 { background: rgba(179,58,42,0.3) !important; border: 1px solid #b33a2a !important; color: #e07a6a !important; }
+    .craft-count { color: #e8c97a !important; }
+
+    /* Mat labels */
+    .mat-label { color: #c9a84c !important; }
+    .mat-converted, .mat-usage-nums { color: #8a7a5a !important; }
+
+    /* Level indicator */
+    .level-indicator {
+      background: rgba(201,168,76,0.08) !important;
+      border: 1px solid #8a6a20 !important;
+      color: #c9a84c !important;
+    }
+
+    /* Mini bars */
+    .mini-bar { background: #161208 !important; }
+    .mini-fill.ok    { background: #4aaa4a !important; }
+    .mini-fill.warn  { background: #c9a84c !important; }
+    .mini-fill.danger{ background: #c84a2a !important; }
+
     /* Page breaks */
-    .rollup-stage { page-break-inside: avoid; }
-    .rollup-section { page-break-before: always; }
-    .mat-summary-table { page-break-inside: avoid; }
+    .rollup-stage { page-break-inside: avoid; break-inside: avoid; }
+    .rollup-section { page-break-before: always; break-before: always; }
+    .mat-summary-table { page-break-inside: avoid; break-inside: avoid; }
+    .results-header { page-break-inside: avoid; break-inside: avoid; }
+    .craft-table { page-break-inside: avoid; break-inside: avoid; }
   }
 
   /* ── CHATBOT ──────────────────────────────────────────────────────────────── */
