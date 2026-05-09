@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viper X Dae Temp Rolling Bot</title>
+<title>Viper X Dae's Temp Rolling Bot</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -318,7 +318,7 @@
 
     /* Simulated page watermark */
     body::after {
-      content: "Viper's Temp Rolling Bot";
+      content: "Viper X Dae's Temp Rolling Bot";
       position: fixed;
       bottom: 12px;
       right: 16px;
@@ -524,7 +524,7 @@
 <body>
 
 <div class="header">
-  <h1>🐍 VIPER & DAE'S TEMP ROLLING BOT 🐍</h1>
+  <h1>🐍 VIPER X DAE'S TEMP ROLLING BOT 🐍</h1>
   <div style="text-align:center;margin-bottom:18px">
     <button id="exportBtn" onclick="exportPDF()" style="background:linear-gradient(135deg,#8a6914,#c9a84c);color:#fff;border:none;padding:10px 28px;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;display:none">
       ⬇ EXPORT AS PDF
@@ -611,7 +611,7 @@
 
     <!-- ROLL-UP PROJECTION SECTION -->
     <div class="rollup-section" id="rollupSection" style="display:none">
-      <div class="section-title">Roll-Up Projection — Level 10 → 30</div>
+      <div class="section-title">Roll-Up Projection — Full Chain to L30</div>
       <div id="rollupContent"></div>
     </div>
   </div>
@@ -1005,16 +1005,16 @@ function renderResults(lvl, available, poorAvailable, remaining, craftCounts, to
     ? `<strong style="color:var(--text)">Total poor mats used:</strong> ${totalUsedPoor.toLocaleString()} &nbsp;|&nbsp; <strong style="color:var(--text)">Total poor mats left over:</strong> <span style="color:#6aaa6a">${totalRemPoor.toLocaleString()}</span> \u2014 see per-material breakdown above.`
     : '\u2713 All mats fully consumed \u2014 perfect balance! Nothing left over.';
 
-  // \u2500\u2500 Roll-Up Projection (only shown when crafting L15, i.e. starting from L10 temps) \u2500\u2500
-  renderRollUp(poorAvailable, selectedMultiplier);
+  // \u2500\u2500 Roll-Up Projection (shown for all starting levels) \u2500\u2500
+  renderRollUp(poorAvailable, selectedMultiplier, lvl, temps);
   showExportBtn();
 }
 
-// \u2500\u2500 DYNAMIC OPTIMIZER \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// -- DYNAMIC OPTIMIZER -----------------------------------------------------------
 // Iterative Proportional Reweighting:
-// Given actual mat quantities, compute recipe weights so that the FRACTION
-// consumed of each mat is equal. That way, no matter how unbalanced the
-// starting mats are, the leftovers after all 4 stages are as equal as possible.
+// Given actual mat quantities and a starting level, compute recipe weights so
+// that the FRACTION consumed of each mat is equal across all stages from
+// startLevel to 30. That way, leftovers after all stages are as even as possible.
 //
 // Algorithm per iteration:
 //   1. Compute demand pressure[m] = demandRate[m] / avail[m] for each mat
@@ -1023,15 +1023,24 @@ function renderResults(lvl, available, poorAvailable, remaining, craftCounts, to
 //   3. Renormalize weights within each level
 //   Repeat until pressure ratios converge to 1.0
 
-function computeOptimalWeights(poorAvailable, multiplier) {
-  // Convert poor \u2192 usable
+function computeOptimalWeights(poorAvailable, multiplier, startLevel) {
+  // Convert poor -> usable
   const avail = {};
   MATS.forEach(m => {
     avail[m.id] = Math.max(1, Math.floor((poorAvailable[m.id] || 0) / multiplier));
   });
 
-  const STAGES = [15, 20, 25, 30];
-  const chainMult = { 15: 1.0, 20: 0.4, 25: 0.16, 30: 0.064 };
+  const ALL_STAGES = [15, 20, 25, 30];
+  const STAGES = ALL_STAGES.filter(s => s >= startLevel);
+
+  // Chain multipliers relative to startLevel temps
+  // e.g. if startLevel=15: mult[15]=1, mult[20]=0.4, mult[25]=0.16, mult[30]=0.064
+  // if startLevel=20: mult[20]=1, mult[25]=0.4, mult[30]=0.16
+  const LEG_RATE = 0.40;
+  const chainMult = {};
+  STAGES.forEach((lvl, i) => {
+    chainMult[lvl] = Math.pow(LEG_RATE, i);
+  });
 
   // Init equal weights per level
   const weights = {};
@@ -1040,7 +1049,7 @@ function computeOptimalWeights(poorAvailable, multiplier) {
     weights[lvl] = Array(n).fill(1 / n);
   });
 
-  // Compute demand rate per mat per unit T15 (given current weights)
+  // Compute demand rate per mat per unit startLevel temp (given current weights)
   function demandRate() {
     const d = {};
     MATS.forEach(m => d[m.id] = 0);
@@ -1054,49 +1063,41 @@ function computeOptimalWeights(poorAvailable, multiplier) {
     return d;
   }
 
-  // Iterative reweighting \u2014 400 iterations is plenty
+  // Iterative reweighting — 400 iterations
   for (let iter = 0; iter < 400; iter++) {
     const d = demandRate();
-
-    // Pressure per mat: how heavily consumed relative to availability
     const pressure = {};
     MATS.forEach(m => { pressure[m.id] = d[m.id] / avail[m.id]; });
     const meanP = MATS.reduce((s, m) => s + pressure[m.id], 0) / MATS.length;
 
-    // Adjust each level's weights
     STAGES.forEach(lvl => {
       const rlist = RECIPES[lvl].priority;
       weights[lvl] = rlist.map((r, i) => {
-        // Multiply current weight by ratio of meanP / pressure for each mat in recipe
-        // Recipes using over-abundant mats (pressure < mean) get boosted
-        // Recipes using scarce mats (pressure > mean) get reduced
         let factor = 1.0;
         r.mats.forEach(mid => {
           factor *= Math.pow(meanP / Math.max(pressure[mid], 1e-12), 0.12);
         });
         return Math.max(0.001, weights[lvl][i] * factor);
       });
-      // Renormalize
       const s = weights[lvl].reduce((a, b) => a + b, 0);
       weights[lvl] = weights[lvl].map(v => v / s);
     });
   }
 
-  // Final demand rate and max T15
+  // Final demand rate and max start-level temps
   const d = demandRate();
-  let maxT15 = Infinity;
+  let maxStartTemps = Infinity;
   MATS.forEach(m => {
     if (d[m.id] > 0 && avail[m.id] > 1)
-      maxT15 = Math.min(maxT15, avail[m.id] / d[m.id]);
+      maxStartTemps = Math.min(maxStartTemps, avail[m.id] / d[m.id]);
   });
-  maxT15 = Math.floor(isFinite(maxT15) ? maxT15 : 0);
+  maxStartTemps = Math.floor(isFinite(maxStartTemps) ? maxStartTemps : 0);
 
-  return { weights, maxT15 };
+  return { weights, maxStartTemps, chainMult, STAGES };
 }
 
-function runRollUpProjection(poorAvailable, multiplier) {
+function runRollUpProjection(poorAvailable, multiplier, startLevel, requestedTemps) {
   const LEG_RATE = 0.40;
-  const STAGES = [15, 20, 25, 30];
 
   // Convert poor mats to usable
   const totalAvail = {};
@@ -1104,10 +1105,15 @@ function runRollUpProjection(poorAvailable, multiplier) {
     totalAvail[m.id] = Math.floor((poorAvailable[m.id] || 0) / multiplier);
   });
 
-  // Run dynamic optimizer to get weights tailored to actual mat quantities
-  const { weights: optWeights, maxT15 } = computeOptimalWeights(poorAvailable, multiplier);
+  // Run dynamic optimizer for stages from startLevel onward
+  const { weights: optWeights, maxStartTemps, chainMult, STAGES } = computeOptimalWeights(poorAvailable, multiplier, startLevel);
 
-  // Compute mat cost for T temps using dynamically optimized weights
+  // The actual number of start-level temps to plan for:
+  // Use the requested count unless mats can't support it — then cap at maxStartTemps
+  const effectiveTemps = Math.min(requestedTemps, maxStartTemps);
+  const cappedByMats = effectiveTemps < requestedTemps;
+
+  // Compute mat cost for T temps at a given level using dynamically optimized weights
   function simulateCostForTemps(lvl, T) {
     const priority = RECIPES[lvl].priority;
     const w = optWeights[lvl];
@@ -1120,12 +1126,15 @@ function runRollUpProjection(poorAvailable, multiplier) {
     return used;
   }
 
-  // Chain multipliers relative to T15
-  const chainMult = { 15: 1, 20: 0.4, 25: 0.16, 30: 0.064 };
+  if (!effectiveTemps || effectiveTemps <= 0) return null;
 
-  // maxT15 comes from computeOptimalWeights; find which mat is the bottleneck
-  if (!maxT15 || maxT15 <= 0) return null;
+  // Build temps per stage based on effectiveTemps and chain multipliers
+  const tempsPerStage = {};
+  STAGES.forEach((lvl, i) => {
+    tempsPerStage[lvl] = i === 0 ? effectiveTemps : Math.floor(effectiveTemps * chainMult[lvl]);
+  });
 
+  // Find limiting mat
   let limitingMat = null, limitingRatio = Infinity;
   const _dr = {};
   MATS.forEach(m => _dr[m.id] = 0);
@@ -1142,12 +1151,6 @@ function runRollUpProjection(poorAvailable, multiplier) {
       if (ratio < limitingRatio) { limitingRatio = ratio; limitingMat = m.id; }
     }
   });
-  const tempsPerStage = {
-    15: maxT15,
-    20: Math.floor(maxT15 * 0.4),
-    25: Math.floor(maxT15 * 0.16),
-    30: Math.floor(maxT15 * 0.064),
-  };
 
   // Compute mat usage per stage
   const usagePerStage = {};
@@ -1156,19 +1159,25 @@ function runRollUpProjection(poorAvailable, multiplier) {
 
   STAGES.forEach(lvl => {
     const t = tempsPerStage[lvl];
-    const used = {};
     const stageUsed = simulateCostForTemps(lvl, t);
+    const used = {};
     MATS.forEach(m => {
       used[m.id] = stageUsed[m.id] || 0;
-      running[m.id] = (running[m.id] || 0) - used[m.id];
-      if (running[m.id] < 0) running[m.id] = 0;
+      running[m.id] = Math.max(0, (running[m.id] || 0) - used[m.id]);
     });
     usagePerStage[lvl] = used;
     remainingAfterStage[lvl] = { ...running };
   });
 
+  const lastStage = STAGES[STAGES.length - 1];
+  const finalLegs = Math.floor(tempsPerStage[lastStage] * LEG_RATE);
+
   return {
-    maxT15,
+    startLevel,
+    effectiveTemps,
+    cappedByMats,
+    requestedTemps,
+    maxStartTemps,
     tempsPerStage,
     usagePerStage,
     remainingAfterStage,
@@ -1178,21 +1187,18 @@ function runRollUpProjection(poorAvailable, multiplier) {
     multiplier,
     poorAvailable,
     optWeights,
+    chainMult,
+    STAGES,
+    finalLegs,
+    LEG_RATE,
   };
 }
 
-function renderRollUp(poorAvailable, multiplier) {
+function renderRollUp(poorAvailable, multiplier, startLevel, requestedTemps) {
   const section = document.getElementById('rollupSection');
   const content = document.getElementById('rollupContent');
 
-  // Only show if the current craft level is L15 (L10 temps being used)
-  const lvl = parseInt(document.getElementById('targetLevel').value);
-  if (lvl !== 15) {
-    section.style.display = 'none';
-    return;
-  }
-
-  const res = runRollUpProjection(poorAvailable, multiplier);
+  const res = runRollUpProjection(poorAvailable, multiplier, startLevel, requestedTemps);
   if (!res) {
     section.style.display = 'none';
     return;
@@ -1200,31 +1206,77 @@ function renderRollUp(poorAvailable, multiplier) {
 
   section.style.display = 'block';
 
-  const { maxT15, tempsPerStage, usagePerStage, remainingAfterStage, finalRemaining, limitingMat, totalAvail } = res;
-  const STAGES = [15, 20, 25, 30];
-  const stageLabel = { 15: 'L10 \u2192 L15', 20: 'L15 \u2192 L20', 25: 'L20 \u2192 L25', 30: 'L25 \u2192 L30' };
-  const expectedLegs = { 15: tempsPerStage[20], 20: tempsPerStage[25], 25: tempsPerStage[30], 30: Math.floor(tempsPerStage[30] * 0.4) };
+  const {
+    effectiveTemps, cappedByMats, maxStartTemps,
+    tempsPerStage, usagePerStage, remainingAfterStage,
+    finalRemaining, limitingMat, totalAvail,
+    STAGES, chainMult, finalLegs, LEG_RATE,
+  } = res;
+
+  // Stage labels based on actual starting level
+  const inputLevelLabel  = { 15:'L10', 20:'L15', 25:'L20', 30:'L25' };
+  const outputLevelLabel = { 15:'L15', 20:'L20', 25:'L25', 30:'L30' };
+  const stageLabel = {};
+  STAGES.forEach(lvl => {
+    stageLabel[lvl] = `${inputLevelLabel[lvl]} \u2192 ${outputLevelLabel[lvl]}`;
+  });
+
+  // Expected legs produced at each stage
+  const expectedLegs = {};
+  STAGES.forEach((lvl, i) => {
+    const nextStageIdx = i + 1;
+    if (nextStageIdx < STAGES.length) {
+      expectedLegs[lvl] = tempsPerStage[STAGES[nextStageIdx]];
+    } else {
+      expectedLegs[lvl] = finalLegs;
+    }
+  });
 
   function matIcon(id) { return matIconTagSmall(id); }
-
   const limitingName = MATS.find(m => m.id === limitingMat)?.name || limitingMat;
 
-  let html = `
+  // Section title
+  const lastStage = STAGES[STAGES.length - 1];
+  document.querySelector('#rollupSection .section-title') &&
+    (document.querySelector('#rollupSection .section-title').textContent =
+      `Roll-Up Projection \u2014 ${inputLevelLabel[startLevel]} \u2192 L30`);
+
+  // Build chain string for assumptions box
+  const chainStr = [effectiveTemps.toLocaleString(), ...STAGES.slice(1).map(lvl => tempsPerStage[lvl].toLocaleString()), `~${finalLegs.toLocaleString()} L30 legs`].join(' \u2192 ');
+
+  let html = '';
+
+  // Capping warning if user requested more temps than mats support
+  if (cappedByMats) {
+    html += `
+    <div class="not-enough-box" style="margin-bottom:18px">
+      <div class="title">\u26A0 NOT ENOUGH MATS FOR ${requestedTemps.toLocaleString()} TEMPS — PLAN ADJUSTED</div>
+      <div class="body">
+        Your materials can only support <strong>${maxStartTemps.toLocaleString()}</strong> ${inputLevelLabel[startLevel]} temps through the full chain to L30.
+        The roadmap below is built for <strong>${effectiveTemps.toLocaleString()} temps</strong> — the maximum your mats allow.<br><br>
+        To roll <strong>${requestedTemps.toLocaleString()} temps</strong>, you need approximately
+        <strong>${Math.ceil(requestedTemps / maxStartTemps * 100)}%</strong> more materials overall.
+        <strong style="color:var(--gold)">${limitingName}</strong> is your current bottleneck.
+      </div>
+    </div>`;
+  }
+
+  html += `
     <div class="rollup-assumptions">
       <div class="assume-title">\u2691 ASSUMPTIONS &amp; METHOD</div>
-      <strong>Legendary odds:</strong> 40% \u2014 with purple mats + legendary temp, ~40% of crafts yield a legendary piece usable as a temp for the next level.<br>
-      <strong>Chain:</strong> ${maxT15.toLocaleString()} L10 temps \u2192 ${tempsPerStage[20].toLocaleString()} L15 legs \u2192 ${tempsPerStage[25].toLocaleString()} L20 legs \u2192 ${tempsPerStage[30].toLocaleString()} L25 legs \u2192 ~${Math.floor(tempsPerStage[30]*0.4).toLocaleString()} L30 legs<br>
-      <strong>Mat allocation:</strong> Recipes are weighted using linear programming (not equal split) to minimise variance across all 12 mats. Each mat should be consumed at nearly identical rates across all 4 stages.<br>
+      <strong>Legendary odds:</strong> ${(LEG_RATE*100).toFixed(0)}% \u2014 with purple mats + legendary temp, ~${(LEG_RATE*100).toFixed(0)}% of crafts yield a legendary piece usable as a temp for the next level.<br>
+      <strong>Chain:</strong> ${chainStr}<br>
+      <strong>Mat allocation:</strong> Recipes are weighted using iterative proportional reweighting (not equal split) to minimise variance across all 12 mats. Each mat should be consumed at nearly identical rates across all stages.<br>
       <strong>Bottleneck mat:</strong> <strong style="color:var(--gold)">${limitingName}</strong> is the limiting material that caps your maximum roll-up chain.<br>
-      <strong>Note:</strong> 40% is a statistical average. Your actual results will vary \u2014 you may get slightly more or fewer legs at each stage.
+      <strong>Note:</strong> ${(LEG_RATE*100).toFixed(0)}% is a statistical average. Your actual results will vary \u2014 you may get slightly more or fewer legs at each stage.
     </div>
 
     <div class="rollup-outcome">
-      <span class="big">${Math.floor(tempsPerStage[30] * 0.4).toLocaleString()}</span>
+      <span class="big">${finalLegs.toLocaleString()}</span>
       <span class="label">Estimated Level 30 Legendaries</span>
       <div class="sub">
-        Starting from <strong style="color:var(--gold)">${maxT15.toLocaleString()}</strong> Level 10 temps, rolling through all 4 stages at 40% odds.<br>
-        <span style="font-size:11px">( ${maxT15.toLocaleString()} \u2192 ${tempsPerStage[20].toLocaleString()} \u2192 ${tempsPerStage[25].toLocaleString()} \u2192 ${tempsPerStage[30].toLocaleString()} \u2192 <strong style="color:var(--gold)">${Math.floor(tempsPerStage[30]*0.4).toLocaleString()} L30 legs</strong> )</span>
+        Starting from <strong style="color:var(--gold)">${effectiveTemps.toLocaleString()}</strong> ${inputLevelLabel[startLevel]} temps, rolling through all stages at ${(LEG_RATE*100).toFixed(0)}% odds.<br>
+        <span style="font-size:11px">( ${chainStr} )</span>
       </div>
     </div>
 
@@ -1240,7 +1292,7 @@ function renderRollUp(poorAvailable, multiplier) {
   });
   html += `</div>`;
 
-  // Per-stage mat breakdown + craft plan
+  // Per-stage breakdown
   STAGES.forEach((lvl, si) => {
     const t = tempsPerStage[lvl];
     const used = usagePerStage[lvl];
@@ -1249,7 +1301,13 @@ function renderRollUp(poorAvailable, multiplier) {
     const rdata = RECIPES[lvl];
     const weights = res.optWeights[lvl] || rdata.priority.map(() => 1/rdata.priority.length);
 
-    // Build craft plan for this stage using dynamically optimized weights
+    const isLastStage = si === STAGES.length - 1;
+    const legsOut = expectedLegs[lvl];
+    const legsLabel = isLastStage
+      ? `\u2192 ~${legsOut.toLocaleString()} L30 legendaries \uD83C\uDFC6`
+      : `\u2192 ~${legsOut.toLocaleString()} ${outputLevelLabel[lvl]} legendaries (your next temps)`;
+
+    // Build craft plan
     let craftPlanHTML = '';
     rdata.priority.forEach((r, i) => {
       const count = Math.round((weights[i] || 0) * t);
@@ -1273,7 +1331,7 @@ function renderRollUp(poorAvailable, multiplier) {
         <div class="rollup-stage-header">
           <span class="rollup-stage-badge">Stage ${si+1}</span>
           <span class="rollup-stage-label">${stageLabel[lvl]} \u2014 Craft ${t.toLocaleString()} temps</span>
-          <span class="rollup-stage-count">\u2192 ~${expectedLegs[lvl].toLocaleString()} ${lvl < 30 ? `L${lvl} legendaries (your next temps)` : 'L30 legendaries \uD83C\uDFC6'}</span>
+          <span class="rollup-stage-count">${legsLabel}</span>
         </div>
 
         <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;font-style:italic">
@@ -1321,14 +1379,14 @@ function renderRollUp(poorAvailable, multiplier) {
     });
 
     html += `</tbody></table></div></div>`;
-    if (si < 3) html += `<div class="stage-arrow">\u2193</div>`;
+    if (si < STAGES.length - 1) html += `<div class="stage-arrow">\u2193</div>`;
   });
 
   // Final remaining mats
   html += `
     <div class="section-title" style="margin-top:24px;margin-bottom:12px">Mats Remaining After Full Roll-Up</div>
     <div style="font-size:12px;color:var(--text-dim);font-style:italic;margin-bottom:12px">
-      These are the usable mats left after completing all 4 stages. With balanced allocation, amounts should be similar across mats.
+      These are the usable mats left after completing all stages. With balanced allocation, amounts should be similar across mats.
     </div>
     <div class="rollup-mat-table">
       <table>
@@ -1361,9 +1419,9 @@ function renderRollUp(poorAvailable, multiplier) {
 
   html += `</tbody></table></div>
     <div class="info-box" style="margin-top:12px">
-      <strong style="color:var(--text)">Bottom line:</strong> With your current mats and balanced allocation across all 4 stages, you can roll
-      <strong style="color:var(--gold)">${maxT15.toLocaleString()} L10 temps</strong> all the way through and expect approximately
-      <strong style="color:var(--gold)">${Math.floor(tempsPerStage[30]*0.4).toLocaleString()} Level 30 legendaries</strong> at the end. Actual results vary \u00B110\u201315% depending on your luck at each stage.
+      <strong style="color:var(--text)">Bottom line:</strong> With your current mats and balanced allocation across all stages, you can roll
+      <strong style="color:var(--gold)">${effectiveTemps.toLocaleString()} ${inputLevelLabel[startLevel]} temps</strong> all the way through and expect approximately
+      <strong style="color:var(--gold)">${finalLegs.toLocaleString()} Level 30 legendaries</strong> at the end. Actual results vary \u00B110\u201315% depending on your luck at each stage.
     </div>`;
 
   content.innerHTML = html;
