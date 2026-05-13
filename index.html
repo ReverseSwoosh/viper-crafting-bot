@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viper X Dae's Temp Rolling Bot</title>
+<title>DAE X Viper's Temp Rolling Bot</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -198,7 +198,7 @@
   .craft-table tr:hover td { background: rgba(201,168,76,0.03); }
 
   .badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 9px; font-family: 'Cinzel', serif; margin-right: 4px; }
-  .badge-s1 { background: rgba(42,90,138,0.3); border: 1px solid #2a5a8a; color: #6aacdd; }
+  .badge-s0 { background: rgba(42,90,138,0.3); border: 1px solid #2a5a8a; color: #6aacdd; }
   .badge-s3 { background: rgba(179,58,42,0.3); border: 1px solid #b33a2a; color: #e07a6a; }
   .craft-count { font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold-light); font-weight: 600; }
 
@@ -302,7 +302,7 @@
       margin: 1.2cm 1.2cm 1.8cm 1.2cm;
       background: #0d0b08;
       @bottom-right {
-        content: "Viper's Temp Rolling Bot";
+        content: "DAE X 's Temp Rolling Bot";
         font-size: 9px;
         color: #8a7a5a;
         font-style: italic;
@@ -318,7 +318,7 @@
 
     /* Simulated page watermark */
     body::after {
-      content: "Viper X Dae's Temp Rolling Bot";
+      content: "DAE X 's Temp Rolling Bot";
       position: fixed;
       bottom: 12px;
       right: 16px;
@@ -430,7 +430,7 @@
     .max-temps-box .big-num { color: #6add6a !important; }
 
     /* Badges */
-    .badge-s1 { background: rgba(42,90,138,0.3) !important; border: 1px solid #2a5a8a !important; color: #6aacdd !important; }
+    .badge-s0 { background: rgba(42,90,138,0.3) !important; border: 1px solid #2a5a8a !important; color: #6aacdd !important; }
     .badge-s3 { background: rgba(179,58,42,0.3) !important; border: 1px solid #b33a2a !important; color: #e07a6a !important; }
     .craft-count { color: #e8c97a !important; }
 
@@ -519,12 +519,53 @@
     background: #0d0a04;
   }
   @media print { #chat-btn, #chat-panel { display: none !important; } }
+
+  /* ── SAVE REMINDER MODAL ─────────────────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 10000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--bg-card);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 28px 30px 24px;
+    max-width: 420px; width: 90%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(201,168,76,0.2);
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn { from { transform:scale(0.88); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .modal-box .modal-icon { font-size: 36px; margin-bottom: 10px; }
+  .modal-box h3 {
+    font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 2px;
+    color: var(--gold-light); margin-bottom: 10px;
+  }
+  .modal-box p { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 18px; }
+  .modal-box p strong { color: var(--text); }
+  .modal-btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .modal-btn-primary {
+    background: linear-gradient(135deg,#8a6914,#c9a84c); color: #000;
+    border: none; padding: 10px 22px; border-radius: 6px;
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px;
+    cursor: pointer; font-weight: 700;
+  }
+  .modal-btn-secondary {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border-bright); padding: 10px 22px; border-radius: 6px;
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px;
+    cursor: pointer;
+  }
+  .modal-btn-secondary:hover { color: var(--text); border-color: var(--gold); }
+
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🐍 VIPER X DAE'S TEMP ROLLING BOT 🐍</h1>
+  <h1>💫 X 🐍 DAE X 'S TEMP ROLLING BOT 💫 X 🐍</h1>
   <div style="text-align:center;margin-bottom:18px">
     <button id="exportBtn" onclick="exportPDF()" style="background:linear-gradient(135deg,#8a6914,#c9a84c);color:#fff;border:none;padding:10px 28px;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;cursor:pointer;display:none">
       ⬇ EXPORT AS PDF
@@ -582,6 +623,7 @@
     <div class="results-header" id="statsRow"></div>
     <div id="warningBox"></div>
     <div class="section-title">Recommended Crafts</div>
+    <div id="singleLevelNotice"></div>
     <div class="craft-table">
       <table>
         <thead><tr>
@@ -611,6 +653,7 @@
 
     <!-- ROLL-UP PROJECTION SECTION -->
     <div class="rollup-section" id="rollupSection" style="display:none">
+      <div id="rollupGuidanceBanner"></div>
       <div class="section-title">Roll-Up Projection — Full Chain to L30</div>
       <div id="rollupContent"></div>
     </div>
@@ -679,8 +722,8 @@ const MATS = [
 const RECIPES = {
   15: {
     priority: [
-      { name:'Well-heeled Shoes',              season:'S1', slot:'Boots',  mats:['weirwood','silk','dragonglass'],                          qty:120 },
-      { name:'Steel-Toed Stompers',            season:'S1', slot:'Boots',  mats:['black_iron','goldenheart_wood','weirwood'],               qty:120 },
+      { name:'Well-heeled Shoes',              season:'S0', slot:'Boots',  mats:['weirwood','silk','dragonglass'],                          qty:120 },
+      { name:'Steel-Toed Stompers',            season:'S0', slot:'Boots',  mats:['black_iron','goldenheart_wood','weirwood'],               qty:120 },
       { name:'CT Targaryen Helm',              season:'S3', slot:'Helm',   mats:['kingswood_oak','wildfire','hide'],                        qty:120 },
       { name:'CT Warlord Chestplate',          season:'S3', slot:'Chest',  mats:['silk','black_iron','copper_bar'],                         qty:120 },
       { name:'CT Warlord Pants',               season:'S3', slot:'Legs',   mats:['weirwood','leather_straps','black_iron'],                 qty:120 },
@@ -689,22 +732,22 @@ const RECIPES = {
       { name:'CT Warlord Sword',               season:'S3', slot:'Weapon', mats:['copper_bar','dragonglass','leather_straps'],              qty:120 },
     ],
     fallback: [
-      { name:'Iron Skullcap',      season:'S1', slot:'Helm',   mats:['black_iron','leather_straps'],       qty:180 },
-      { name:'Steel Gorget',       season:'S1', slot:'Helm',   mats:['black_iron','milk_of_poppy'],        qty:180 },
-      { name:'Mushroom Cap',       season:'S1', slot:'Helm',   mats:['wildfire','weirwood'],               qty:180 },
-      { name:'Lab Smock',          season:'S1', slot:'Chest',  mats:['wildfire','silk'],                   qty:180 },
-      { name:'Bronze Chain Shirt', season:'S1', slot:'Chest',  mats:['copper_bar','hide'],                 qty:180 },
-      { name:'Charred Leathers',   season:'S1', slot:'Chest',  mats:['leather_straps','wildfire'],         qty:180 },
-      { name:'Leather Schynbalds', season:'S1', slot:'Legs',   mats:['leather_straps','ironwood'],         qty:180 },
-      { name:'Leather Kilt',       season:'S1', slot:'Legs',   mats:['hide','ironwood'],                   qty:180 },
-      { name:'Copper Culet',       season:'S1', slot:'Legs',   mats:['copper_bar','wildfire'],             qty:180 },
-      { name:'Riding Boots',       season:'S1', slot:'Boots',  mats:['leather_straps','ironwood'],         qty:180 },
-      { name:'Amethyst Embrace',   season:'S1', slot:'Ring',   mats:['dragonglass','silk'],                qty:180 },
-      { name:"Tiger's Eye Ring",  season:'S1', slot:'Ring',   mats:['dragonglass','ironwood'],            qty:180 },
-      { name:'Silver Band',        season:'S1', slot:'Ring',   mats:['ironwood','milk_of_poppy'],          qty:180 },
-      { name:'Flatbow',            season:'S1', slot:'Weapon', mats:['goldenheart_wood','milk_of_poppy'],  qty:180 },
-      { name:'Pike',               season:'S1', slot:'Weapon', mats:['goldenheart_wood','hide'],           qty:180 },
-      { name:'Short Sword',        season:'S1', slot:'Weapon', mats:['ironwood','copper_bar'],             qty:180 },
+      { name:'Iron Skullcap',      season:'S0', slot:'Helm',   mats:['black_iron','leather_straps'],       qty:180 },
+      { name:'Steel Gorget',       season:'S0', slot:'Helm',   mats:['black_iron','milk_of_poppy'],        qty:180 },
+      { name:'Mushroom Cap',       season:'S0', slot:'Helm',   mats:['wildfire','weirwood'],               qty:180 },
+      { name:'Lab Smock',          season:'S0', slot:'Chest',  mats:['wildfire','silk'],                   qty:180 },
+      { name:'Bronze Chain Shirt', season:'S0', slot:'Chest',  mats:['copper_bar','hide'],                 qty:180 },
+      { name:'Charred Leathers',   season:'S0', slot:'Chest',  mats:['leather_straps','wildfire'],         qty:180 },
+      { name:'Leather Schynbalds', season:'S0', slot:'Legs',   mats:['leather_straps','ironwood'],         qty:180 },
+      { name:'Leather Kilt',       season:'S0', slot:'Legs',   mats:['hide','ironwood'],                   qty:180 },
+      { name:'Copper Culet',       season:'S0', slot:'Legs',   mats:['copper_bar','wildfire'],             qty:180 },
+      { name:'Riding Boots',       season:'S0', slot:'Boots',  mats:['leather_straps','ironwood'],         qty:180 },
+      { name:'Amethyst Embrace',   season:'S0', slot:'Ring',   mats:['dragonglass','silk'],                qty:180 },
+      { name:"Tiger's Eye Ring",  season:'S0', slot:'Ring',   mats:['dragonglass','ironwood'],            qty:180 },
+      { name:'Silver Band',        season:'S0', slot:'Ring',   mats:['ironwood','milk_of_poppy'],          qty:180 },
+      { name:'Flatbow',            season:'S0', slot:'Weapon', mats:['goldenheart_wood','milk_of_poppy'],  qty:180 },
+      { name:'Pike',               season:'S0', slot:'Weapon', mats:['goldenheart_wood','hide'],           qty:180 },
+      { name:'Short Sword',        season:'S0', slot:'Weapon', mats:['ironwood','copper_bar'],             qty:180 },
     ],
     tempLabel: 'Number of Level 10 Temps',
   },
@@ -728,22 +771,22 @@ const RECIPES = {
       { name:'CT Targaryen Boots (L25)',       season:'S3', slot:'Boots',  mats:['milk_of_poppy','hide','ironwood','goldenheart_wood'],      qty:1200 },
       { name:'CT Targaryen Ring (L25)',        season:'S3', slot:'Ring',   mats:['ironwood','goldenheart_wood','wildfire','kingswood_oak'],  qty:1200 },
       { name:'CT Targaryen Sword (L25)',       season:'S3', slot:'Weapon', mats:['copper_bar','dragonglass','leather_straps','weirwood'],    qty:1200 },
-      { name:'Hand Axe',                       season:'S1', slot:'Weapon', mats:['leather_straps','black_iron','hide'],                     qty:1600 },
-      { name:'Gladius',                        season:'S1', slot:'Weapon', mats:['weirwood','black_iron','dragonglass'],                    qty:1600 },
-      { name:'Pirate Tricorne',                season:'S1', slot:'Helm',   mats:['hide','leather_straps','silk'],                           qty:1600 },
-      { name:'Lead Circlet',                   season:'S1', slot:'Helm',   mats:['black_iron','ironwood','dragonglass'],                    qty:1600 },
-      { name:"Traveler's Hood",               season:'S1', slot:'Helm',   mats:['hide','milk_of_poppy','goldenheart_wood'],                qty:1600 },
-      { name:'Iron Chainmail',                 season:'S1', slot:'Chest',  mats:['leather_straps','black_iron','hide'],                     qty:1600 },
-      { name:'Riveted Brigandine',             season:'S1', slot:'Chest',  mats:['weirwood','copper_bar','dragonglass'],                    qty:1600 },
-      { name:'Bronze Chausses',                season:'S1', slot:'Legs',   mats:['copper_bar','weirwood','ironwood'],                       qty:1600 },
-      { name:'Golden Fauld',                   season:'S1', slot:'Legs',   mats:['copper_bar','silk','ironwood'],                           qty:1600 },
-      { name:'Tyroshi Leggings',               season:'S1', slot:'Legs',   mats:['milk_of_poppy','wildfire','dragonglass'],                 qty:1600 },
-      { name:'Dancing Shoes',                  season:'S1', slot:'Boots',  mats:['milk_of_poppy','kingswood_oak','goldenheart_wood'],        qty:1600 },
-      { name:'Electrum Sabatons',              season:'S1', slot:'Boots',  mats:['black_iron','copper_bar','leather_straps'],               qty:1600 },
-      { name:'Painite Ring',                   season:'S1', slot:'Ring',   mats:['dragonglass','leather_straps','goldenheart_wood'],        qty:1600 },
-      { name:'Opal Ring',                      season:'S1', slot:'Ring',   mats:['dragonglass','kingswood_oak','silk'],                     qty:1600 },
-      { name:'Electrum Band',                  season:'S1', slot:'Ring',   mats:['copper_bar','weirwood','ironwood'],                       qty:1600 },
-      { name:'Light Crossbow',                 season:'S1', slot:'Weapon', mats:['weirwood','silk','ironwood'],                             qty:1600 },
+      { name:'Hand Axe',                       season:'S0', slot:'Weapon', mats:['leather_straps','black_iron','hide'],                     qty:1600 },
+      { name:'Gladius',                        season:'S0', slot:'Weapon', mats:['weirwood','black_iron','dragonglass'],                    qty:1600 },
+      { name:'Pirate Tricorne',                season:'S0', slot:'Helm',   mats:['hide','leather_straps','silk'],                           qty:1600 },
+      { name:'Lead Circlet',                   season:'S0', slot:'Helm',   mats:['black_iron','ironwood','dragonglass'],                    qty:1600 },
+      { name:"Traveler's Hood",               season:'S0', slot:'Helm',   mats:['hide','milk_of_poppy','goldenheart_wood'],                qty:1600 },
+      { name:'Iron Chainmail',                 season:'S0', slot:'Chest',  mats:['leather_straps','black_iron','hide'],                     qty:1600 },
+      { name:'Riveted Brigandine',             season:'S0', slot:'Chest',  mats:['weirwood','copper_bar','dragonglass'],                    qty:1600 },
+      { name:'Bronze Chausses',                season:'S0', slot:'Legs',   mats:['copper_bar','weirwood','ironwood'],                       qty:1600 },
+      { name:'Golden Fauld',                   season:'S0', slot:'Legs',   mats:['copper_bar','silk','ironwood'],                           qty:1600 },
+      { name:'Tyroshi Leggings',               season:'S0', slot:'Legs',   mats:['milk_of_poppy','wildfire','dragonglass'],                 qty:1600 },
+      { name:'Dancing Shoes',                  season:'S0', slot:'Boots',  mats:['milk_of_poppy','kingswood_oak','goldenheart_wood'],        qty:1600 },
+      { name:'Electrum Sabatons',              season:'S0', slot:'Boots',  mats:['black_iron','copper_bar','leather_straps'],               qty:1600 },
+      { name:'Painite Ring',                   season:'S0', slot:'Ring',   mats:['dragonglass','leather_straps','goldenheart_wood'],        qty:1600 },
+      { name:'Opal Ring',                      season:'S0', slot:'Ring',   mats:['dragonglass','kingswood_oak','silk'],                     qty:1600 },
+      { name:'Electrum Band',                  season:'S0', slot:'Ring',   mats:['copper_bar','weirwood','ironwood'],                       qty:1600 },
+      { name:'Light Crossbow',                 season:'S0', slot:'Weapon', mats:['weirwood','silk','ironwood'],                             qty:1600 },
     ],
     fallback: [],
     tempLabel: 'Number of Level 20 Temps',
@@ -756,7 +799,7 @@ const RECIPES = {
       { name:'CT Targaryen Boots (L30)',       season:'S3', slot:'Boots',  mats:['milk_of_poppy','hide','ironwood','goldenheart_wood'],                  qty:3000 },
       { name:'CT Targaryen Ring (L30)',        season:'S3', slot:'Ring',   mats:['ironwood','goldenheart_wood','wildfire','kingswood_oak'],              qty:3000 },
       { name:'CT Targaryen Sword (L30)',       season:'S3', slot:'Weapon', mats:['copper_bar','dragonglass','leather_straps','weirwood'],                qty:3000 },
-      { name:'Spiked Boots',                   season:'S1', slot:'Boots',  mats:['leather_straps','copper_bar','wildfire','dragonglass'],               qty:3000 },
+      { name:'Spiked Boots',                   season:'S0', slot:'Boots',  mats:['leather_straps','copper_bar','wildfire','dragonglass'],               qty:3000 },
     ],
     fallback: [],
     tempLabel: 'Number of Level 25 Temps',
@@ -940,6 +983,21 @@ function renderResults(lvl, available, poorAvailable, remaining, craftCounts, to
       </div>`;
   }
 
+  // ── Single-level notice ──
+  const inputLvlLabel = { 15:'L10', 20:'L15', 25:'L20', 30:'L25' };
+  const outputLvlLabel = { 15:'L15', 20:'L20', 25:'L25', 30:'L30' };
+  document.getElementById('singleLevelNotice').innerHTML = `
+    <div class="info-box" style="border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.06);margin-bottom:16px">
+      <strong style="color:var(--gold-light)">⚠ This plan is for rolling ${inputLvlLabel[lvl]} → ${outputLvlLabel[lvl]} only.</strong><br>
+      <span style="color:var(--text-dim)">
+        The recipe mix above is optimised to craft as many <strong style="color:var(--text)">${outputLvlLabel[lvl]} temps</strong> as possible with your current mats —
+        but it does <strong style="color:var(--text)">not</strong> balance your materials for stages beyond ${outputLvlLabel[lvl]}.
+        If your goal is to roll all the way to <strong style="color:var(--text)">Level 30</strong>, scroll down and
+        <strong style="color:var(--gold)">follow the Roll-Up Projection plan instead</strong> — it balances all 12 mats
+        across every stage so nothing runs out early.
+      </span>
+    </div>`;
+
   // \u2500\u2500 Craft table \u2500\u2500
   const tbody = document.getElementById('craftRows');
   tbody.innerHTML = '';
@@ -949,7 +1007,7 @@ function renderResults(lvl, available, poorAvailable, remaining, craftCounts, to
     if (!count) return;
     const badge = r.season === 'S3'
       ? `<span class="badge badge-s3">S3</span>`
-      : `<span class="badge badge-s1">S1</span>`;
+      : `<span class="badge badge-s0">S0</span>`;
     const matNames = r.mats.map(id => MATS.find(m=>m.id===id)?.name||id).join(', ');
     tbody.innerHTML += `
       <tr>
@@ -1244,6 +1302,22 @@ function renderRollUp(poorAvailable, multiplier, startLevel, requestedTemps) {
   // Build chain string for assumptions box
   const chainStr = [effectiveTemps.toLocaleString(), ...STAGES.slice(1).map(lvl => tempsPerStage[lvl].toLocaleString()), `~${finalLegs.toLocaleString()} L30 legs`].join(' \u2192 ');
 
+  // ── Rollup guidance banner ──
+  const inputLvlLabelRU = { 15:'L10', 20:'L15', 25:'L20', 30:'L25' };
+  const startStageCount = STAGES.length;
+  document.getElementById('rollupGuidanceBanner').innerHTML = `
+    <div class="info-box" style="border-color:rgba(106,170,106,0.5);background:rgba(106,170,106,0.07);margin-bottom:20px">
+      <strong style="color:#6add6a">✦ USE THIS PLAN if you're rolling all the way to Level 30</strong><br>
+      <span style="color:var(--text-dim)">
+        Unlike the single-level plan above, this roadmap balances all 12 mats proportionally across
+        <strong style="color:var(--text)">all ${startStageCount} stages</strong> from
+        <strong style="color:var(--text)">${inputLvlLabelRU[startLevel]}</strong> to
+        <strong style="color:var(--text)">L30</strong>.
+        Follow the craft counts here stage by stage — skipping stages or using the top plan's numbers
+        will throw off the balance and leave you short on certain mats later.
+      </span>
+    </div>`;
+
   let html = '';
 
   // Capping warning if user requested more temps than mats support
@@ -1314,7 +1388,7 @@ function renderRollUp(poorAvailable, multiplier, startLevel, requestedTemps) {
       if (count === 0) return;
       const badge = r.season === 'S3'
         ? `<span class="badge badge-s3">S3</span>`
-        : `<span class="badge badge-s1">S1</span>`;
+        : `<span class="badge badge-s0">S0</span>`;
       const matNames = r.mats.map(id => MATS.find(m=>m.id===id)?.name||id).join(', ');
       craftPlanHTML += `
         <tr>
@@ -1435,17 +1509,31 @@ function exportPDF() {
   const wm = document.createElement('div');
   wm.id = 'print-watermark';
   wm.style.cssText = 'position:fixed;bottom:14px;right:18px;font-size:10px;color:#bbb;font-style:italic;font-family:serif;z-index:9999;pointer-events:none;';
-  wm.textContent = "Viper's Temp Rolling Bot";
+  wm.textContent = "DAE X Viper's Temp Rolling Bot";
   document.body.appendChild(wm);
   window.print();
   setTimeout(() => wm.remove(), 2000);
 }
 
-// Show export button once results are rendered
+// Show export button + save reminder modal once results are rendered
 function showExportBtn() {
   const btn = document.getElementById('exportBtn');
   if (btn) btn.style.display = 'inline-block';
+  // Show save reminder after a short delay so results render first
+  setTimeout(() => {
+    document.getElementById('saveModal').classList.add('open');
+  }, 800);
 }
+
+function closeModal() {
+  document.getElementById('saveModal').classList.remove('open');
+}
+
+// Close modal if user clicks outside the box
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('saveModal');
+  if (e.target === modal) closeModal();
+});
 
 
 // \u2500\u2500 CHATBOT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -1634,17 +1722,17 @@ updateConversions();
 </script>
 
   <!-- CHATBOT -->
-  <button id="chat-btn" onclick="toggleChat()" title="Ask Viper's Bot">🐍</button>
+  <button id="chat-btn" onclick="toggleChat()" title="Ask 💫 DAE">🐍</button>
   <div id="chat-panel">
     <div class="chat-header">
       <div>
-        <div class="chat-header-title">🐍 VIPER'S ASSISTANT</div>
+        <div class="chat-header-title">💫  DAE - 🐍 VIPER'S ASSISTANT</div>
         <div class="chat-header-sub">Ask me anything about your crafting plan</div>
       </div>
       <button class="chat-close" onclick="toggleChat()">✕</button>
     </div>
     <div id="chat-messages">
-      <div class="chat-msg bot">Hey! I'm Dae, Viper's assistant 🐍<br><br>
+      <div class="chat-msg bot">Hey! I'm 💫 DAE 💫, Viper's 🐍 assistant <br><br>
         I can see your current mat inputs and calculate custom scenarios for you — like how many temps you can roll, what happens if you use specific mats, or how to optimise your plan.<br><br>
         What would you like to know?
       </div>
@@ -1656,5 +1744,23 @@ updateConversions();
       <button id="chat-send" onclick="sendChat()">➤</button>
     </div>
   </div>
+
+<!-- ── SAVE REMINDER MODAL ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal-box">
+    <div class="modal-icon">📜</div>
+    <h3>YOUR PLAN IS READY</h3>
+    <p>
+      Save your forge plan now so you don't lose it when the session ends.<br><br>
+      <strong>Download as PDF</strong> to keep a copy — or dismiss and use the
+      <em>Export as PDF</em> button at the top any time.
+    </p>
+    <div class="modal-btn-row">
+      <button class="modal-btn-primary" onclick="exportPDF(); closeModal()">⬇ Download PDF</button>
+      <button class="modal-btn-secondary" onclick="closeModal()">I'll do it later</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
